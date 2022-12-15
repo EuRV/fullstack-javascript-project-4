@@ -26,9 +26,10 @@ describe('page-loader', () => {
     const downloadedPagePath = path.join(tempDir, 'page-loader-hexlet-repl-co.html');
     const correctAnswer = await fsp.readFile(getFixturePath('page.html'), 'utf-8');
     nock(host).get('/').reply(200, correctAnswer);
-    await pageLoader(host, tempDir);
+    const currentPagePath = await pageLoader(host, tempDir);
     const expectedResponse = await fsp.readFile(downloadedPagePath, 'utf-8');
     expect(expectedResponse).toBe(correctAnswer);
+    expect(currentPagePath).toBe(downloadedPagePath);
   });
 });
 
