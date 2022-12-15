@@ -22,9 +22,9 @@ describe('page-loader', () => {
     tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   });
 
-  test('get a response from the site', async () => {
+  test('load a page without local links', async () => {
     const downloadedPagePath = path.join(tempDir, 'page-loader-hexlet-repl-co.html');
-    const correctAnswer = await fsp.readFile(getFixturePath('page.html'), 'utf-8');
+    const correctAnswer = await fsp.readFile(getFixturePath('page-without-links.html'), 'utf-8');
     nock(host).get('/').reply(200, correctAnswer);
     const currentPagePath = await pageLoader(host, tempDir);
     const expectedResponse = await fsp.readFile(downloadedPagePath, 'utf-8');
