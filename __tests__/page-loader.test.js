@@ -31,6 +31,22 @@ describe('page-loader', () => {
     expect(expectedResponse).toBe(correctAnswer);
     expect(currentPagePath).toBe(downloadedPagePath);
   });
+
+  test('load a page with local link', async () => {
+    const downloadedPagePath = path.join(tempDir, 'page-loader-hexlet-repl-co.html');
+    const downloadedAssetPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files/page-loader-hexlet-repl-co-assets-professions-nodejs.png');
+    const responcePageHtml = await fsp.readFile(getFixturePath('page-with-links.html'), 'utf-8');
+    const correctPageHtml = await fsp.readFile(getFixturePath('page-with-local-links.html'), 'utf-8');
+    const correctImg = await fsp.readFile(getFixturePath('nodejs.png'));
+    nock(host).get(/.*/).reply(200, responcePageHtml);
+    nock(host).get('/assets/professions/nodejs.png').reply(200, correctImg);
+    const currentPagePath = await pageLoader(host, tempDir);
+    const expectedPage = await fsp.readFile(downloadedPagePath, 'utf-8');
+    const expectedImg = await fsp.readFile(downloadedAssetPath);
+    expect(expectedPage).toBe(correctPageHtml);
+    expect(expectedImg.compare(correctImg)).toBe(0);
+    expect(currentPagePath).toBe(downloadedPagePath);
+  });
 });
 
 afterAll(() => {
