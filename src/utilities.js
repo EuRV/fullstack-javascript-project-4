@@ -32,7 +32,6 @@ const convertUrlToPath = (link, ending = '') => {
 
 const getPageContentAndDownloadLinks = (data, link, pathToDir) => {
   const tags = { link: 'href', img: 'src', script: 'src' };
-  // const downloadLinks = [];
   const $ = cheerio.load(data);
   const downloadLinks = Object.entries(tags).reduce((acc, [tag, atr]) => {
     const pathToContent = $(tag).map((i, el) => {

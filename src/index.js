@@ -40,5 +40,3 @@ const pageLoader = (link, outputPath = cwd()) => {
 };
 
 export default pageLoader;
-
-// pageLoader('https://page-loader.hexlet.repl.co');
