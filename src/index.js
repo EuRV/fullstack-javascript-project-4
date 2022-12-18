@@ -27,14 +27,14 @@ const pageLoader = (link, outputPath = cwd()) => {
         return null;
       }
       fsp.mkdir(pathToDirAssets, { recursive: true });
-      const contentName = convertUrlToPath(downloadLinks);
-      const [linkToDownloadedAsset] = downloadLinks;
-      console.log(linkToDownloadedAsset);
-      return axios.get(linkToDownloadedAsset, { responseType: 'arraybuffer' })
-        .then((response) => fsp.writeFile(path.join(
-          pathToDirAssets,
-          contentName,
-        ), response.data));
+      return Promise.all(downloadLinks.map((downloadLink) => {
+        const contentName = convertUrlToPath(downloadLink);
+        return axios.get(downloadLink, { responseType: 'arraybuffer' })
+          .then((response) => fsp.writeFile(path.join(
+            pathToDirAssets,
+            contentName,
+          ), response.data));
+      }));
     })
     .then(() => pathToHtmlFile);
 };
