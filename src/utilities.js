@@ -2,24 +2,9 @@ import path from 'path';
 import * as cheerio from 'cheerio';
 import prettier from 'prettier';
 
-const isUrl = (str) => {
-  let url;
-  try {
-    url = new URL(str);
-  } catch {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
-};
+const isCorrectHostname = (link1, link2) => link1.hostname === link2.hostname;
 
-const isCorrectHostname = (link1, link2) => {
-  const url1 = new URL(link1);
-  const url2 = new URL(link2);
-  return url1.hostname === url2.hostname;
-};
-
-const convertUrlToPath = (link, ending = '') => {
-  const url = new URL(link);
+const convertUrlToPath = (url, ending = '') => {
   const { hostname, pathname } = url;
   let basename = '';
   let dirname = '';
@@ -30,24 +15,17 @@ const convertUrlToPath = (link, ending = '') => {
   return path.join(hostname, dirname).replace(/[/\W_]/g, '-').concat(basename).concat(ending);
 };
 
-const getPageContentAndDownloadLinks = (data, link, pathToDir) => {
+const getPageContentAndDownloadLinks = (data, url, pathToDir) => {
   const tags = { link: 'href', img: 'src', script: 'src' };
   const $ = cheerio.load(data);
   const downloadLinks = Object.entries(tags).reduce((acc, [tag, atr]) => {
     const pathToContent = $(tag).map((i, el) => {
-      let linkToAsset;
       let downloadPaths;
       const pathToDownloadedAsset = $(el).attr(atr);
-      if (isUrl(pathToDownloadedAsset) && isCorrectHostname(link, pathToDownloadedAsset)) {
-        linkToAsset = pathToDownloadedAsset;
-      }
-      if (!isUrl(pathToDownloadedAsset)) {
-        linkToAsset = new URL(pathToDownloadedAsset, link).href;
-      }
-      if (linkToAsset) {
+      const linkToAsset = new URL(pathToDownloadedAsset, url);
+      if (isCorrectHostname(url, linkToAsset)) {
         const nameAsset = convertUrlToPath(linkToAsset);
-        const nameAssetsDir = path.basename(pathToDir);
-        const pathToAsset = path.join(nameAssetsDir, nameAsset);
+        const pathToAsset = path.join(pathToDir, nameAsset);
         $(el).attr(atr, pathToAsset);
         downloadPaths = { linkToAsset, pathToAsset };
       }
