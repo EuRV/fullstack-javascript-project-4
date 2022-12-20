@@ -35,21 +35,23 @@ const getPageContentAndDownloadLinks = (data, link, pathToDir) => {
   const $ = cheerio.load(data);
   const downloadLinks = Object.entries(tags).reduce((acc, [tag, atr]) => {
     const pathToContent = $(tag).map((i, el) => {
-      let url;
+      let linkToAsset;
+      let downloadPaths;
       const pathToDownloadedAsset = $(el).attr(atr);
       if (isUrl(pathToDownloadedAsset) && isCorrectHostname(link, pathToDownloadedAsset)) {
-        url = pathToDownloadedAsset;
+        linkToAsset = pathToDownloadedAsset;
       }
       if (!isUrl(pathToDownloadedAsset)) {
-        url = new URL(pathToDownloadedAsset, link).href;
+        linkToAsset = new URL(pathToDownloadedAsset, link).href;
       }
-      if (url) {
-        const nameAsset = convertUrlToPath(url);
+      if (linkToAsset) {
+        const nameAsset = convertUrlToPath(linkToAsset);
         const nameAssetsDir = path.basename(pathToDir);
-        const pathToAssets = path.join(nameAssetsDir, nameAsset);
-        $(el).attr(atr, pathToAssets);
+        const pathToAsset = path.join(nameAssetsDir, nameAsset);
+        $(el).attr(atr, pathToAsset);
+        downloadPaths = { linkToAsset, pathToAsset };
       }
-      return url;
+      return downloadPaths;
     }).toArray();
     return [...acc, ...pathToContent];
   }, []);
