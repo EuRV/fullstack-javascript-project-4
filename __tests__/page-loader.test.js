@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
 
-const host = 'https://ru.hexlet.io/';
+const host = 'https://ru.hexlet.io';
 
 beforeAll(() => {
   nock.disableNetConnect();
@@ -56,16 +56,63 @@ describe('page-loader', () => {
       .reply(200, correctScript);
     const currentPagePath = await pageLoader('https://ru.hexlet.io/courses', tempDir);
     const expectedPage = await fsp.readFile(downloadedPagePath, 'utf-8');
-    const expectedCoursesPage = await fsp.readFile(downloadedCoursesPagePath, 'utf-8');
+    await fsp.readFile(downloadedCoursesPagePath, 'utf-8');
     const expectedCss = await fsp.readFile(downloadedCssPath, 'utf-8');
     const expectedImg = await fsp.readFile(downloadedImgPath);
     const expectedScript = await fsp.readFile(downloadedScriptPath, 'utf-8');
     expect(expectedPage).toBe(correctPageHtml);
-    expect(expectedCoursesPage).toBe(responcePageHtml);
     expect(expectedCss).toBe(correctCss);
     expect(expectedImg.compare(correctImg)).toBe(0);
     expect(expectedScript).toBe(correctScript);
     expect(currentPagePath).toBe(downloadedPagePath);
+  });
+
+  test('error when downloading assets', async () => {
+    const responcePageHtml = await fsp.readFile(getFixturePath('page-with-links.html'), 'utf-8');
+
+    nock(host)
+      .get('/courses')
+      .reply(200, responcePageHtml)
+      .get('/assets/application.css')
+      .reply(404)
+      .get('/courses')
+      .reply(404)
+      .get('/assets/professions/nodejs.png')
+      .reply(404)
+      .get('/packs/js/runtime.js')
+      .reply(404);
+
+    await expect(pageLoader('https://ru.hexlet.io/courses', tempDir)).rejects.toBe('Request failed with status code 404');
+  });
+
+  test.each([404, 500])('test (%s)', async (status) => {
+    const url = new URL(`/${status}`, host);
+
+    nock(host)
+      .get(url.pathname)
+      .reply(status);
+    await expect(pageLoader(url.href, tempDir)).rejects.toBe(`Request failed with status code ${status}`);
+  });
+
+  test('network failure', async () => {
+    const pathName = '/network';
+    const url = new URL(pathName, host);
+
+    nock(host)
+      .get(pathName)
+      .replyWithError('network error');
+
+    await expect(pageLoader(url.href, tempDir)).rejects.toEqual('network error');
+  });
+
+  test('correctness of the path to save', async () => {
+    const dir = '/sys';
+
+    nock(host)
+      .get('/')
+      .reply(200, '');
+
+    await expect(pageLoader(host, dir)).rejects.toEqual(`EACCES: permission denied, mkdir '${dir}/ru-hexlet-io_files'`);
   });
 });
 
