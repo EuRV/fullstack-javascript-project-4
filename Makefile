@@ -17,6 +17,6 @@ test-coverage:
 	npm test -- --coverage --coverageProvider=v8
 
 test-debug:
-	DEBUG=nock.* npm test
+	npm run test-debug
 	
 .PHONY: test
