@@ -4,6 +4,7 @@ import debug from 'debug';
 import fsp from 'fs/promises';
 import path from 'path';
 import { cwd } from 'process';
+import Listr from 'listr';
 import { convertUrlToPath, getPageContentAndDownloadLinks } from './utilities.js';
 
 const nameSpaceLog = 'page-loader';
@@ -12,19 +13,18 @@ const log = debug(nameSpaceLog);
 
 debug('booting %o', nameSpaceLog);
 
-const loadAndSaveFiles = (arrayPathsAndLinks, pathToCurrentDir) => (
-  Promise.all(arrayPathsAndLinks.map(({ linkToAsset, pathToAsset }) => {
-    log('__load file: %o', linkToAsset.href);
-    return axios.get(linkToAsset, { responseType: 'arraybuffer' })
-      .then(({ data }) => {
-        log('__save file from: %o', linkToAsset.href, 'in: ', pathToAsset);
-        return fsp.writeFile(path.join(pathToCurrentDir, pathToAsset), data);
-      }, ((error) => {
-        log('__fail load: %o', linkToAsset.href);
-        throw error;
-      }));
-  }))
-);
+const loadAndSaveFiles = ({ linkToAsset, pathToAsset }, pathToCurrentDir) => {
+  log('__load file: %o', linkToAsset.href);
+  return axios.get(linkToAsset, { responseType: 'arraybuffer' })
+    .then(({ data }) => {
+      log('__save file from: %o', linkToAsset.href, 'in: ', pathToAsset);
+      return fsp.writeFile(path.join(pathToCurrentDir, pathToAsset), data);
+    })
+    .catch((error) => {
+      log('__fail load: %o', linkToAsset.href);
+      throw error;
+    });
+};
 
 const pageLoader = (link, outputPath = cwd()) => {
   log('---- start load %o ----', nameSpaceLog);
@@ -41,11 +41,7 @@ const pageLoader = (link, outputPath = cwd()) => {
   log('load html: %o', link);
   return axios.get(link, { responseType: 'arraybuffer' })
     .then(({ data }) => {
-      pageData = getPageContentAndDownloadLinks(
-        data,
-        url,
-        nameAssetsFolder,
-      );
+      pageData = getPageContentAndDownloadLinks(data, url, nameAssetsFolder);
     })
     .then(() => {
       log('creating a folder: %o', pathToDirAssets);
@@ -59,7 +55,16 @@ const pageLoader = (link, outputPath = cwd()) => {
       if (pageData.downloadLinks.length === 0) {
         return null;
       }
-      return loadAndSaveFiles(pageData.downloadLinks, outputPath);
+      const getTask = (asset) => (
+        {
+          title: `${asset.linkToAsset}`,
+          task: () => loadAndSaveFiles(asset, outputPath),
+        }
+      );
+      return new Listr(
+        pageData.downloadLinks.map(getTask),
+        { concurrent: true, exitOnError: false },
+      ).run();
     })
     .then(() => log('---- finish load %o ----', nameSpaceLog))
     .then(() => pathToHtmlFile)
@@ -71,5 +76,3 @@ const pageLoader = (link, outputPath = cwd()) => {
 };
 
 export default pageLoader;
-
-// pageLoader('https://page-loader.hexlet.repl.co', '/sys');
