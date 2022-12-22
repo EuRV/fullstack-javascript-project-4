@@ -24,7 +24,7 @@ const getPageContentAndDownloadLinks = (data, url, pathToDir) => {
       const pathToDownloadedAsset = $(el).attr(atr);
       const linkToAsset = new URL(pathToDownloadedAsset, url);
       if (isCorrectHostname(url, linkToAsset)) {
-        const nameAsset = convertUrlToPath(linkToAsset);
+        const nameAsset = !path.extname(linkToAsset.pathname) ? convertUrlToPath(linkToAsset, '.html') : convertUrlToPath(linkToAsset);
         const pathToAsset = path.join(pathToDir, nameAsset);
         $(el).attr(atr, pathToAsset);
         downloadPaths = { linkToAsset, pathToAsset };
