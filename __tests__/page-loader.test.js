@@ -34,7 +34,7 @@ describe('page-loader', () => {
 
   test('load a page with local link', async () => {
     const downloadedPagePath = path.join(tempDir, 'ru-hexlet-io-courses.html');
-    const downloadedCoursesPagePath = path.join(tempDir, 'ru-hexlet-io-courses_files/ru-hexlet-io-courses');
+    const downloadedCoursesPagePath = path.join(tempDir, 'ru-hexlet-io-courses_files/ru-hexlet-io-courses.html');
     const downloadedCssPath = path.join(tempDir, 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css');
     const downloadedImgPath = path.join(tempDir, 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
     const downloadedScriptPath = path.join(tempDir, 'ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js');
@@ -54,17 +54,17 @@ describe('page-loader', () => {
       .reply(200, correctImg)
       .get('/packs/js/runtime.js')
       .reply(200, correctScript);
-    const currentPagePath = await pageLoader('https://ru.hexlet.io/courses', tempDir);
+    await pageLoader('https://ru.hexlet.io/courses', tempDir);
     const expectedPage = await fsp.readFile(downloadedPagePath, 'utf-8');
-    await fsp.readFile(downloadedCoursesPagePath, 'utf-8');
+    const expectedCoursesPage = await fsp.readFile(downloadedCoursesPagePath, 'utf-8');
     const expectedCss = await fsp.readFile(downloadedCssPath, 'utf-8');
     const expectedImg = await fsp.readFile(downloadedImgPath);
     const expectedScript = await fsp.readFile(downloadedScriptPath, 'utf-8');
     expect(expectedPage).toBe(correctPageHtml);
     expect(expectedCss).toBe(correctCss);
+    expect(expectedCoursesPage).toBe(responcePageHtml);
     expect(expectedImg.compare(correctImg)).toBe(0);
     expect(expectedScript).toBe(correctScript);
-    expect(currentPagePath).toBe(downloadedPagePath);
   });
 
   test('error when downloading assets', async () => {
@@ -82,7 +82,7 @@ describe('page-loader', () => {
       .get('/packs/js/runtime.js')
       .reply(404);
 
-    await expect(pageLoader('https://ru.hexlet.io/courses', tempDir)).rejects.toBe('Request failed with status code 404');
+    await expect(pageLoader('https://ru.hexlet.io/courses', tempDir)).rejects.toBe('Something went wrong');
   });
 
   test.each([404, 500])('test (%s)', async (status) => {
