@@ -16,7 +16,7 @@ beforeAll(() => {
   nock.disableNetConnect();
 });
 
-describe('page-loader', () => {
+describe('positive case', () => {
   let tempDir;
   beforeEach(async () => {
     tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
@@ -67,6 +67,17 @@ describe('page-loader', () => {
     expect(expectedScript).toBe(correctScript);
   });
 
+  afterAll(() => {
+    nock.cleanAll();
+  });
+});
+
+describe('negative case', () => {
+  let tempDir;
+  beforeEach(async () => {
+    tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+  });
+
   test('error when downloading assets', async () => {
     const responcePageHtml = await fsp.readFile(getFixturePath('page-with-links.html'), 'utf-8');
 
@@ -82,7 +93,7 @@ describe('page-loader', () => {
       .get('/packs/js/runtime.js')
       .reply(404);
 
-    await expect(pageLoader('https://ru.hexlet.io/courses', tempDir)).rejects.toBe('Something went wrong');
+    await expect(pageLoader('https://ru.hexlet.io/courses', tempDir)).rejects.toThrow();
   });
 
   test.each([404, 500])('error response (%s)', async (status) => {
@@ -91,7 +102,7 @@ describe('page-loader', () => {
     nock(host)
       .get(url.pathname)
       .reply(status);
-    await expect(pageLoader(url.href, tempDir)).rejects.toBe(`Request failed with status code ${status}`);
+    await expect(pageLoader(url.href, tempDir)).rejects.toThrow();
   });
 
   test('network failure', async () => {
@@ -102,7 +113,7 @@ describe('page-loader', () => {
       .get(pathName)
       .replyWithError('network error');
 
-    await expect(pageLoader(url.href, tempDir)).rejects.toEqual('network error');
+    await expect(pageLoader(url.href, tempDir)).rejects.toThrow('network error');
   });
 
   test('correctness of the path to save', async () => {
@@ -112,11 +123,14 @@ describe('page-loader', () => {
       .get('/')
       .reply(200, '');
 
-    await expect(pageLoader(host, dir)).rejects.toEqual(`EACCES: permission denied, mkdir '${dir}/ru-hexlet-io_files'`);
+    await expect(pageLoader(host, dir)).rejects.toThrow(`EACCES: permission denied, mkdir '${dir}/ru-hexlet-io_files'`);
+  });
+
+  afterAll(() => {
+    nock.cleanAll();
   });
 });
 
 afterAll(() => {
-  nock.cleanAll();
   nock.enableNetConnect();
 });
