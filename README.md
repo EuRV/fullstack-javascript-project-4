@@ -28,6 +28,7 @@ make link
 
 ## Usage
 ```cmd
+[...@fedora fullstack-javascript-project-4]$ page-loader -h
 Usage: page-loader [options] <link>
 
 Downloads the page from the web and puts it in the specified directory
@@ -44,3 +45,5 @@ page-loader -o page-loader https://page-loader.hexlet.repl.co
 ```cmd
 page-loader https://page-loader.hexlet.repl.co
 ```
+## Example
+[![asciicast](https://asciinema.org/a/kLRy5gv04bG9ogHH8u84uAiXU.svg)](https://asciinema.org/a/kLRy5gv04bG9ogHH8u84uAiXU)
