@@ -33,9 +33,9 @@ const pageLoader = (link, outputPath = cwd()) => {
 
   const url = new URL(link);
   const nameAssetsFolder = convertUrlToPath(url, '_files');
-  const pathToDirAssets = path.join(outputPath, nameAssetsFolder);
+  const pathToDirAssets = path.resolve(outputPath, nameAssetsFolder);
   const fileName = convertUrlToPath(url, '.html');
-  const pathToHtmlFile = path.join(outputPath, fileName);
+  const pathToHtmlFile = path.resolve(outputPath, fileName);
   let pageData;
 
   log('load html: %o', link);
@@ -43,10 +43,10 @@ const pageLoader = (link, outputPath = cwd()) => {
     .then(({ data }) => {
       pageData = getPageContentAndDownloadLinks(data, url, nameAssetsFolder);
     })
-    .then(() => {
+    .then(() => fsp.access(pathToDirAssets).catch(() => {
       log('creating a folder: %o', pathToDirAssets);
-      return fsp.mkdir(pathToDirAssets, { recursive: true });
-    })
+      return fsp.mkdir(pathToDirAssets);
+    }))
     .then(() => {
       log('save html: %o', pathToHtmlFile);
       return fsp.writeFile(pathToHtmlFile, pageData.pageContent);
