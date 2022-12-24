@@ -1,5 +1,5 @@
 import axios from 'axios';
-import 'axios-debug-log';
+// import 'axios-debug-log';
 import debug from 'debug';
 import fsp from 'fs/promises';
 import path from 'path';
@@ -8,9 +8,7 @@ import Listr from 'listr';
 import { convertUrlToPath, getPageContentAndDownloadLinks } from './utilities.js';
 
 const nameSpaceLog = 'page-loader';
-
 const log = debug(nameSpaceLog);
-
 debug('booting %o', nameSpaceLog);
 
 const loadAndSaveFiles = ({ linkToAsset, pathToAsset }, pathToCurrentDir) => {
@@ -71,7 +69,7 @@ const pageLoader = (link, outputPath = cwd()) => {
     .catch((error) => {
       log(`error: '${error.message}'`);
       log('---- error load %o ----', nameSpaceLog);
-      throw error.message;
+      throw error;
     });
 };
 

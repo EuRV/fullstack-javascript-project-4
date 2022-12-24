@@ -13,7 +13,7 @@ program
   .action((link, option) => pageLoader(link, option.output)
     .then((pathToFile) => console.log(pathToFile))
     .catch((error) => {
-      console.error('Error: %o', error);
+      console.error('Error: %o', error.message);
       process.exit(1);
     }));
 
