@@ -85,7 +85,7 @@ describe('page-loader', () => {
     await expect(pageLoader('https://ru.hexlet.io/courses', tempDir)).rejects.toBe('Something went wrong');
   });
 
-  test.each([404, 500])('test (%s)', async (status) => {
+  test.each([404, 500])('error response (%s)', async (status) => {
     const url = new URL(`/${status}`, host);
 
     nock(host)
